@@ -62,5 +62,29 @@ namespace SpoolTools.Revit.Spooling
             }
             return seen.OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToList();
         }
+
+        /// <summary>Groups the given element ids by their current Spool
+        /// Number parameter. Parts with no spool number are omitted.
+        /// Used by the safety-net warning dialog.</summary>
+        public static Dictionary<string, List<ElementId>> GroupByExistingSpool(
+            Document doc, IEnumerable<ElementId> ids)
+        {
+            var result = new Dictionary<string, List<ElementId>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var id in ids)
+            {
+                var e = doc.GetElement(id);
+                if (e == null) continue;
+                string? v = ParameterHelper.FindParameter(e, SpoolNumberParam)?.AsString();
+                if (string.IsNullOrWhiteSpace(v)) continue;
+                var key = v.Trim();
+                if (!result.TryGetValue(key, out var list))
+                {
+                    list = new List<ElementId>();
+                    result[key] = list;
+                }
+                list.Add(id);
+            }
+            return result;
+        }
     }
 }

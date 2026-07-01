@@ -47,6 +47,24 @@ namespace SpoolTools
                 .Where(id => doc.GetElement(id) is FabricationPart)
                 .ToList();
 
+            // Safety-net: warn if any pre-selected part already on a
+            // spool. Cancel aborts; Continue proceeds and the affected
+            // parts' Spool Number will be overwritten when the batch
+            // runs.
+            if (preselected.Count > 0)
+            {
+                var membership = SpoolNumberRegistry.GroupByExistingSpool(doc, preselected);
+                if (membership.Count > 0)
+                {
+                    var warn = new SpoolMembershipWarningDialog(uiDoc, membership, "The Spooler");
+                    if (warn.ShowDialog() != true)
+                    {
+                        uiDoc.Selection.SetElementIds(new List<ElementId>());
+                        return Result.Cancelled;
+                    }
+                }
+            }
+
             // Create a selection-scoped 3D preview view up front so the
             // dialog can host an interactive 3D viewport that color-codes
             // each partition as the user picks Start / Breaks. Skipped

@@ -53,6 +53,24 @@ namespace SpoolTools
                 .ToList();
             var spoolValues = SpoolNumberRegistry.CurrentValuesOn(doc, preselected);
 
+            // Safety-net: warn if pre-selection includes parts already
+            // on a spool. Cancel aborts, Continue proceeds (existing
+            // Spool Number will be overwritten when the new spool is
+            // created).
+            if (preselected.Count > 0)
+            {
+                var membership = SpoolNumberRegistry.GroupByExistingSpool(doc, preselected);
+                if (membership.Count > 0)
+                {
+                    var warn = new SpoolMembershipWarningDialog(uiDoc, membership, "Create Spool");
+                    if (warn.ShowDialog() != true)
+                    {
+                        uiDoc.Selection.SetElementIds(new List<ElementId>());
+                        return Result.Cancelled;
+                    }
+                }
+            }
+
             // Create a throwaway 3D preview view if we have pre-selection so the
             // dialog can host an interactive orbit/zoom view via PreviewControl.
             ElementId? previewViewId = null;

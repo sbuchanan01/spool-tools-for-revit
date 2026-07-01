@@ -1,0 +1,85 @@
+<Window x:Class="SpoolTools.UI.SpoolMembershipWarningDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Elements Already on a Spool"
+        Width="520"
+        MinWidth="440" MinHeight="260"
+        SizeToContent="Height"
+        MaxHeight="560"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2D6B9E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"    Value="18,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Padding"    Value="14,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   FontSize="14" FontWeight="SemiBold" Foreground="#C0392B"
+                   Text="{Binding Heading}"
+                   TextWrapping="Wrap" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="1"
+                   FontSize="12" Foreground="#333333"
+                   Text="{Binding Explanation}"
+                   TextWrapping="Wrap" Margin="0,0,0,10"/>
+        <Border Grid.Row="2" BorderBrush="#DDDDDD" BorderThickness="1"
+                CornerRadius="4" Background="White" Padding="10,8"
+                Margin="0,0,0,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Groups}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontSize="12" Margin="0,2"
+                                       Foreground="#333333"
+                                       Text="{Binding DisplayText}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="Show in Model"
+                    Style="{StaticResource SecondaryButton}"
+                    Click="Show_Click" Padding="14,6"
+                    ToolTip="Highlight the affected parts in the active Revit view and pan/zoom to them. This dialog stays open so you can decide after inspecting."/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
+                        Click="Cancel_Click" IsCancel="True" Margin="0,0,6,0"/>
+                <Button Content="Continue" Style="{StaticResource PrimaryButton}"
+                        Click="Continue_Click" IsDefault="True"
+                        ToolTip="Proceed into the tool. The affected parts will be included in the new spool and their existing Spool Number will be overwritten when the spool is created."/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
