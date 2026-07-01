@@ -1,0 +1,477 @@
+<Window x:Class="SpoolTools.UI.SpoolConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Spool Config"
+        Width="1000" Height="860"
+        MinWidth="820" MinHeight="560"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize"   Value="13"/>
+            <Setter Property="Foreground" Value="#2D6B9E"/>
+            <Setter Property="Margin"     Value="0,12,0,4"/>
+        </Style>
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+        </Style>
+        <Style x:Key="HelpText" TargetType="TextBlock">
+            <Setter Property="FontSize"   Value="11"/>
+            <Setter Property="Foreground" Value="#777777"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin"     Value="0,0,0,6"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="4,3"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="BorderBrush" Value="#BBBBBB"/>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2D6B9E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"    Value="18,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Padding"    Value="14,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <Style x:Key="CubeToggle" TargetType="CheckBox">
+            <!-- Fixed Width on every CheckBox makes the squares line up
+                 vertically within each column. Without it, HorizontalAlignment
+                 = Center centred each natural-width box (e.g. "Left" narrower
+                 than "NW Iso"), leaving the squares at different X positions. -->
+            <Setter Property="Width"               Value="62"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment"   Value="Center"/>
+            <Setter Property="FontSize"            Value="10"/>
+            <Setter Property="Margin"              Value="1"/>
+        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="16,8,16,8">
+
+                <TextBlock Style="{StaticResource HelpText}"
+                           Text="Project-level defaults for the Create Spool and The Spooler tools. These values are loaded into each per-run dialog when it opens. Saving here updates the shared store immediately — the per-run dialogs pick up the new defaults next time they're opened."/>
+
+                <!-- ═══════════════════════════════════════════════════════════
+                     Top half: 2×2 grid (Spool Output / Default Views | Limits / Leader).
+                     Bottom half (outside this 2x2 wrapper): full-width
+                     Batch Templates. Layout mirrors the user's sketch —
+                     pairs of related-but-distinct sections side by side
+                     instead of one long scrolling column.
+                     ════════════════════════════════════════════════════════════ -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>   <!-- gutter between columns -->
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ── Top-left: Spool Output Defaults ─────────────── -->
+                    <StackPanel Grid.Row="0" Grid.Column="0">
+                <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,4" Text="Spool Output Defaults"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Titleblock:"/>
+                    <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0"
+                                  ItemsSource="{Binding Titleblocks}"
+                                  SelectedItem="{Binding SelectedTitleblock}"
+                                  DisplayMemberPath="DisplayName"/>
+                        <Button Grid.Column="1" Click="DefineRegion_Click"
+                                Style="{StaticResource SecondaryButton}"
+                                Padding="10,4" Margin="8,0,0,0"
+                                Content="Edit Drawable Region"
+                                ToolTip="Hides this dialog, makes a temporary sheet with the chosen titleblock active, then prompts you to pick four points: view region (2 corners) and schedule region (2 corners). Saves them per titleblock for reuse."
+                                IsEnabled="{Binding HasSelectedTitleblock}"/>
+                        <TextBlock Grid.Column="2" Text="&#10003;"
+                                   FontWeight="Bold" FontSize="16"
+                                   Foreground="#2E8B2E"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   ToolTip="Drawable region is defined for this titleblock."
+                                   Visibility="{Binding RegionDefined, Converter={StaticResource BoolToVis}}"/>
+                    </Grid>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Schedule:"/>
+                    <ComboBox  Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"
+                               ItemsSource="{Binding Schedules}"
+                               SelectedItem="{Binding SelectedSchedule}"
+                               DisplayMemberPath="DisplayName"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Lbl}" Text="Default View Scale:"/>
+                    <ComboBox  Grid.Row="2" Grid.Column="1" Margin="0,0,0,4"
+                               ItemsSource="{Binding Scales}"
+                               SelectedItem="{Binding SelectedScale}"
+                               DisplayMemberPath="DisplayName"
+                               ToolTip="The starting scale offered in the per-run dialogs. 'Auto Fit' chooses the coarsest standard scale that lets all views fit their grid cells."/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource Lbl}" Text="View Template:"/>
+                    <ComboBox  Grid.Row="3" Grid.Column="1" Margin="0,0,0,4"
+                               ItemsSource="{Binding ViewTemplates}"
+                               SelectedItem="{Binding SelectedViewTemplate}"
+                               DisplayMemberPath="DisplayName"
+                               ToolTip="Optional. Apply this view template to every spool view (plan, section, iso). Choose '(No template)' to leave views unstyled."/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource Lbl}" Text="Tag Family:"/>
+                    <ComboBox  Grid.Row="4" Grid.Column="1" Margin="0,0,0,4"
+                               ItemsSource="{Binding TagFamilies}"
+                               SelectedItem="{Binding SelectedTagFamily}"
+                               DisplayMemberPath="DisplayName"
+                               ToolTip="Annotation tag family dropped on each fabrication part. Choose 'Do not place Tags' to skip tagging."/>
+
+                    <!-- Row 5: "Change Spool Status" — replaces the
+                         hard-coded "Fabrication Status" = "Issued for
+                         Fabrication" write. Dropdown lists project Text
+                         parameters; "(none)" skips the write entirely;
+                         value box on the right is what gets written. -->
+                    <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource Lbl}" Text="Change Spool Status:"/>
+                    <Grid Grid.Row="5" Grid.Column="1" Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0"
+                                  ItemsSource="{Binding StatusParamOptions}"
+                                  SelectedItem="{Binding SelectedStatusParam}"
+                                  ToolTip="Project Text parameter to receive the status value below. Pick '(none — skip status write)' to suppress the status step entirely. Defaults to 'Fabrication Status' so projects that haven't touched Spool Config get the same behavior as before."/>
+                        <TextBlock Grid.Column="1" Text="="
+                                   FontWeight="Bold" FontSize="14"
+                                   Margin="8,0,8,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="#444444"/>
+                        <TextBox Grid.Column="2"
+                                 Text="{Binding StatusParamValue, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{Binding StatusValueEnabled}"
+                                 ToolTip="Value written to the chosen parameter on every spool part. Default 'Issued for Fabrication' matches the historical behavior."/>
+                    </Grid>
+                </Grid>
+                    </StackPanel>
+
+                    <!-- ── Top-right: Default Views to Create ──────────── -->
+                    <StackPanel Grid.Row="0" Grid.Column="2">
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,4" Text="* Default Views to Create"/>
+                        <Border Background="White" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4"
+                                Padding="4" HorizontalAlignment="Left">
+                            <Grid Width="220" Height="86">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <CheckBox Grid.Row="0" Grid.Column="0" Style="{StaticResource CubeToggle}"
+                                          Content="NW Iso" IsChecked="{Binding NwIsoChecked}"/>
+                                <CheckBox Grid.Row="0" Grid.Column="1" Style="{StaticResource CubeToggle}"
+                                          Content="Top"    IsChecked="{Binding TopChecked}"/>
+                                <CheckBox Grid.Row="0" Grid.Column="2" Style="{StaticResource CubeToggle}"
+                                          Content="NE Iso" IsChecked="{Binding NeIsoChecked}"/>
+                                <CheckBox Grid.Row="1" Grid.Column="0" Style="{StaticResource CubeToggle}"
+                                          Content="Left"   IsChecked="{Binding LeftChecked}"/>
+                                <CheckBox Grid.Row="1" Grid.Column="2" Style="{StaticResource CubeToggle}"
+                                          Content="Right"  IsChecked="{Binding RightChecked}"/>
+                                <CheckBox Grid.Row="2" Grid.Column="0" Style="{StaticResource CubeToggle}"
+                                          Content="SW Iso" IsChecked="{Binding SwIsoChecked}"/>
+                                <CheckBox Grid.Row="2" Grid.Column="1" Style="{StaticResource CubeToggle}"
+                                          Content="Front"  IsChecked="{Binding FrontChecked}"/>
+                                <CheckBox Grid.Row="2" Grid.Column="2" Style="{StaticResource CubeToggle}"
+                                          Content="SE Iso" IsChecked="{Binding SeIsoChecked}"/>
+                            </Grid>
+                        </Border>
+
+                        <CheckBox Content="Include Welds (default)"
+                                  IsChecked="{Binding IncludeWelds}"
+                                  Margin="0,8,0,2"
+                                  ToolTip="When on (default), every selected part is renumbered and tagged. When off, parts whose Product Range is 'Joints' are skipped for Item Number renumbering AND tag placement — they're still pinned and shown in the views."/>
+                        <CheckBox Content="Use Assemblies (default)"
+                                  IsChecked="{Binding UseAssemblies}"
+                                  Margin="0,2,0,2"
+                                  ToolTip="When on, each spool becomes a Revit AssemblyInstance (members + assembly views + assembly sheet) instead of an ad-hoc 3D view tree on a normal sheet."/>
+                        <CheckBox Content="Interactive Tagging (pick each tag location)"
+                                  IsChecked="{Binding InteractiveTagging}"
+                                  Margin="0,2,0,2"
+                                  ToolTip="When on, after the spool views are created the tool walks each view and asks you to click where to place each tag, in Item Number order. Press Esc on any prompt to skip that one tag. Otherwise tags auto-place at part centers."/>
+                    </StackPanel>
+
+                    <!-- ── Bottom-left: Spool Limits ───────────────────── -->
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,4" Text="Spool Limits"/>
+                        <TextBlock Style="{StaticResource HelpText}"
+                                   Text="Upper bounds shared by both tools. Create Spool warns when a single selection exceeds either limit (Modify Selection or Continue Anyway). The Spooler uses the same values to auto-split a batch run."/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <CheckBox Grid.Row="0" Grid.Column="0"
+                                      Content="Max Weight:" VerticalAlignment="Center"
+                                      Margin="0,2,0,4"
+                                      IsChecked="{Binding MaxWeightEnabled}"
+                                      ToolTip="When enabled and exceeded, Create Spool shows a Modify Selection / Continue Anyway prompt before building the spool. The Spooler treats this as a per-spool weight cap during auto-split."/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Width="80" Margin="0,2,0,4"
+                                     IsEnabled="{Binding MaxWeightEnabled}"
+                                     Text="{Binding MaxWeightLbText, UpdateSourceTrigger=LostFocus}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Margin="6,0,0,0"
+                                       VerticalAlignment="Center" Foreground="#777777"
+                                       Text="lbs (per spool)"/>
+
+                            <CheckBox Grid.Row="1" Grid.Column="0"
+                                      Content="Max Length:" VerticalAlignment="Center"
+                                      Margin="0,2,0,4"
+                                      IsChecked="{Binding MaxLengthEnabled}"
+                                      ToolTip="When enabled and exceeded, Create Spool shows a Modify Selection / Continue Anyway prompt. The Spooler treats this as a per-spool length cap during auto-split. Length is the longest dimension of the union bounding box of all parts. Accepts &quot;10.5&quot; (decimal feet), &quot;10-6&quot; or &quot;10'-6\&quot;&quot; (feet-inches)."/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Width="80" Margin="0,2,0,4"
+                                     IsEnabled="{Binding MaxLengthEnabled}"
+                                     Text="{Binding MaxLengthText, UpdateSourceTrigger=LostFocus}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="2" Margin="6,0,0,0"
+                                       VerticalAlignment="Center" Foreground="#777777"
+                                       Text="ft  (e.g. 10.5 or 10-6)"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- ── Bottom-right: Leader Defaults + Dimensions ──── -->
+                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0,0,0,4" Text="Leader Defaults"/>
+                        <TextBlock Style="{StaticResource HelpText}"
+                                   Text="Starting values for the Leader Settings popup in the per-run Create Spool dialog. Edit per-run if a particular spool needs different leader behaviour."/>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Foreground="#444444"
+                                       TextWrapping="Wrap"
+                                       Text="{Binding LeaderSummary}"/>
+                            <Button Grid.Column="1"
+                                    Click="LeaderSettings_Click"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="10,4" Margin="8,0,0,0"
+                                    Content="Leader Settings…"/>
+                        </Grid>
+
+                        <!-- Enhanced Tag Placement — opt-in to the multi-
+                             position bbox-avoidance + shape-aware (elbow
+                             inside, tee between branch/run) placer. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <CheckBox Content="Enhanced Tag Placement"
+                                      IsChecked="{Binding EnhancedTagPlacement}"
+                                      VerticalAlignment="Center"
+                                      ToolTip="Smarter tag placement: avoids overlap with parts and other tags, with shape-aware preferences for elbows and tees. See Learn more for details."/>
+                            <Button Click="EnhancedTagLearnMore_Click"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="#2D6B9E" Cursor="Hand"
+                                    Padding="6,0,0,0" Margin="6,0,0,0"
+                                    VerticalAlignment="Center" FontSize="11"
+                                    Content="Learn more"/>
+                        </StackPanel>
+
+                        <!-- ── Dimensions sub-section ─────────────────────
+                             Settings surface stays visible so users can
+                             see the planned controls, but the entire
+                             block is DISABLED for this release while
+                             the placement engine matures. The header
+                             carries the "feature not deployed" callout
+                             so it's unambiguous. -->
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0,12,0,4"
+                                   Text="Dimensions (feature not deployed in this release)"/>
+                        <TextBlock Style="{StaticResource HelpText}"
+                                   Text="Defaults for the per-run Dimensions row. Style is the project DimensionType the engine applies; Default Offset (inches) is the gap between the dim line and the pipe."/>
+                        <Grid IsEnabled="False">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Lbl}" Text="Style:"/>
+                            <ComboBox  Grid.Row="0" Grid.Column="1" Margin="0,0,0,4"
+                                       ItemsSource="{Binding DimensionStyles}"
+                                       SelectedItem="{Binding SelectedDimensionStyle}"
+                                       DisplayMemberPath="DisplayName"
+                                       ToolTip="Project DimensionType applied to every dim the engine emits. '(Revit default)' uses whatever Revit picks if no project DimensionType is configured."/>
+
+                            <CheckBox  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Content="Include Dimensions (default)"
+                                       Margin="0,2,0,4"
+                                       IsChecked="{Binding IncludeDimensionsDefault}"
+                                       ToolTip="When on, the per-run Create Spool dialog opens with its Dimensions checkbox already on. Per-run still controls THIS spool."/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Lbl}" Text="Default Offset:"/>
+                            <Grid Grid.Row="2" Grid.Column="1" Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding DimensionOffsetInchesText, UpdateSourceTrigger=LostFocus}"
+                                         ToolTip="Distance in inches from the dimensioned element to the dim line. Stacked dim layers (segment / overall) use multiples of this."/>
+                                <TextBlock Grid.Column="1" Margin="6,0,0,0"
+                                           VerticalAlignment="Center" Foreground="#777777"
+                                           Text="inches"/>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ═══ THE SPOOLER BATCH TEMPLATES ═══ -->
+                <TextBlock Style="{StaticResource SectionHeader}" Text="The Spooler — Batch Templates"/>
+
+                <!-- Boxed primer: what the tool does, what each property means,
+                     and a worked example so first-time users see the full
+                     pipeline at a glance instead of guessing from a property
+                     list. Keeps the form rows below uncluttered. -->
+                <Border Margin="0,0,0,6" Padding="10,8" Background="#F8F8F8"
+                        BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3">
+                    <StackPanel>
+                        <TextBlock FontSize="11" Foreground="#555555" TextWrapping="Wrap">
+                            Drop any of these <Run FontWeight="SemiBold">properties</Run> into the templates below;
+                            each spool's number / name / sheet are built by substituting the values at run time:
+                        </TextBlock>
+                        <TextBlock FontSize="11" Foreground="#555555" TextWrapping="Wrap" Margin="0,4,0,0">
+                            <Run FontFamily="Consolas">{Service}</Run> service abbreviation (e.g. CHW) ·
+                            <Run FontFamily="Consolas">{ServiceName}</Run> full service name ·
+                            <Run FontFamily="Consolas">{ID}</Run> Identifier field below ·
+                            <Run FontFamily="Consolas">{N}</Run> sequence number ·
+                            <Run FontFamily="Consolas">{N:00}</Run> zero-padded sequence (01, 02… / use <Run FontFamily="Consolas">{N:000}</Run> for 3-digit) ·
+                            <Run FontFamily="Consolas">{Number}</Run> resolved spool number (name template only)
+                        </TextBlock>
+                        <TextBlock FontSize="11" Foreground="#666666" TextWrapping="Wrap" Margin="0,6,0,0">
+                            <Run FontStyle="Italic">Example with defaults — first spool of a CHW run gets number </Run>
+                            <Run FontFamily="Consolas" Foreground="#2D6B9E">CHW-001-01</Run>
+                            <Run FontStyle="Italic">, name </Run>
+                            <Run FontFamily="Consolas" Foreground="#2D6B9E">Spool CHW-001-01</Run>
+                            <Run FontStyle="Italic">, on sheet </Run>
+                            <Run FontFamily="Consolas" Foreground="#2D6B9E">S1</Run>
+                            <Run FontStyle="Italic">. Subsequent spools auto-increment both counters.</Run>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Identifier:"/>
+                    <TextBox   Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"
+                               Text="{Binding Identifier, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="Free-text label inserted wherever {ID} appears in a template (e.g. '001', 'BldgA-L3'). Same value used for every spool in the batch."/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Spool # template:"/>
+                    <TextBox   Grid.Row="1" Grid.Column="1" Margin="0,0,0,2"
+                               FontFamily="Consolas"
+                               Text="{Binding SpoolNumberTemplate, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="Combines properties into each spool's unique number. Default {Service}-{ID}-{N:00} produces CHW-001-01, CHW-001-02, …  Change {N:00} to {N:000} for 3-digit padding."/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Spool name template:"/>
+                    <TextBox   Grid.Row="2" Grid.Column="1" Margin="0,0,0,2"
+                               FontFamily="Consolas"
+                               Text="{Binding SpoolNameTemplate, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="Builds the human-readable name shown in schedules. {Number} resolves to the spool number built by the template above."/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Starting sequence:"/>
+                    <TextBox   Grid.Row="3" Grid.Column="1" Margin="0,0,0,2"
+                               Text="{Binding StartingSequenceText, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="First value for the {N} property. Increments by 1 per spool."/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource Lbl}" Text="* Starting sheet #:"/>
+                    <TextBox   Grid.Row="4" Grid.Column="1" Margin="0,0,0,2"
+                               Text="{Binding StartingSheetNumber, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="First sheet number assigned. Trailing digits increment per spool (S1 → S2 → S3…). Existing sheet numbers in the model are skipped automatically."/>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ FOOTER ═══ -->
+        <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0"
+                Background="#FAFAFA" Padding="16,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock FontSize="11" Foreground="#888888"
+                               Text="{Binding StatusText}" TextWrapping="Wrap"/>
+                    <TextBlock FontSize="10" Foreground="#999999"
+                               Text="*Required setting"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
+                            Click="Cancel_Click" IsCancel="True" Margin="0,0,6,0"/>
+                    <Button Content="Save" Style="{StaticResource PrimaryButton}"
+                            Click="Save_Click" IsDefault="True"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

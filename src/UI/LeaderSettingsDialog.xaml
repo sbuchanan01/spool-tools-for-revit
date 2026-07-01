@@ -1,0 +1,157 @@
+<Window x:Class="SpoolTools.UI.LeaderSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Tag Leader Settings"
+        Width="440" Height="470"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize"   Value="12"/>
+            <Setter Property="Foreground" Value="#2D6B9E"/>
+            <Setter Property="Margin"     Value="0,8,0,4"/>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2D6B9E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"    Value="18,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Padding"    Value="14,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <CheckBox Grid.Row="0"
+                  Content="Place tag with leader"
+                  IsChecked="{Binding PlaceLeader}"
+                  ToolTip="When on, each tag is created with a leader connecting it to the tagged part."/>
+
+        <TextBlock Grid.Row="1" Style="{StaticResource SectionHeader}" Text="Leader End"
+                   IsEnabled="{Binding PlaceLeader}"/>
+
+        <!-- Row 2: 2-column grid — RadioButton on top, schematic diagram
+             underneath each. The diagrams use the existing empty vertical
+             space in the dialog (previously left blank when "Place tag
+             with leader" was off or Free End was selected) so the user
+             gets a quick visual read on which leader style they're
+             picking. Both diagrams share the same simplified part +
+             "3" tag bubble; only the leader / endpoint differs:
+               • Attached End — leader has a shoulder elbow ending in
+                 a SOLID anchor marker right on the part edge.
+               • Free End — single straight leader to a HOLLOW marker
+                 floating in space (the freely-positioned XYZ). -->
+        <Grid Grid.Row="2" Margin="0,0,0,4" IsEnabled="{Binding PlaceLeader}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <RadioButton Grid.Row="0" Grid.Column="0"
+                         Content="Attached End" GroupName="LeaderEnd"
+                         IsChecked="{Binding LeaderAttached}"
+                         ToolTip="Leader endpoint stays glued to the part edge. Use Leader Length below to offset the elbow."/>
+            <RadioButton Grid.Row="0" Grid.Column="2"
+                         Content="Free End" GroupName="LeaderEnd"
+                         IsChecked="{Binding LeaderFree}"
+                         ToolTip="Leader has a free endpoint you position yourself. With interactive tagging on, you'll pick the free end first and the tag position second."/>
+
+            <!-- Schematic images — embedded as WPF Resources via the
+                 csproj <Resource> entry. URI MUST be the explicit
+                 assembly-qualified pack form (";component/...") because
+                 the host application is Revit, not our addin — the
+                 short relative form "/UI/Images/..." resolves against
+                 the wrong (Revit) assembly's resource catalog and
+                 renders nothing. -->
+            <!-- Both Borders share the same fixed Height; the Grid's
+                 equal "*" columns give them the same Width. Image uses
+                 Stretch="Fill" so its pixels exactly fill the box —
+                 user's PNGs have been re-cropped to the right aspect
+                 ratio, so Fill matches without visible distortion. -->
+            <Border Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" Height="130"
+                    Background="#1F1F1F" BorderBrush="#444444" BorderThickness="1" CornerRadius="3"
+                    Padding="0">
+                <Image Source="pack://application:,,,/PCFExporter;component/UI/Images/attached_end.png"
+                       Stretch="Fill"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="2" Margin="0,6,0,0" Height="130"
+                    Background="#1F1F1F" BorderBrush="#444444" BorderThickness="1" CornerRadius="3"
+                    Padding="0">
+                <Image Source="pack://application:,,,/PCFExporter;component/UI/Images/free_end.png"
+                       Stretch="Fill"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="3" Style="{StaticResource SectionHeader}" Text="Tag Offset (in)"
+                   Visibility="{Binding ShowTagOffset, Converter={StaticResource BoolToVis}}"/>
+        <Grid Grid.Row="4"
+              Visibility="{Binding ShowTagOffset, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Padding="4,3" VerticalAlignment="Center"
+                     BorderBrush="#BBBBBB"
+                     Text="{Binding TagOffsetText, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0"
+                       Foreground="#777777" FontSize="11" TextWrapping="Wrap"
+                       Text="Distance from the part to the tag head on the sheet, in paper inches. Applies whether the leader is Attached or Free."/>
+        </Grid>
+
+        <TextBlock Grid.Row="5" Style="{StaticResource SectionHeader}" Text="Leader Length (in)"
+                   Visibility="{Binding ShowLeaderLength, Converter={StaticResource BoolToVis}}"/>
+        <Grid Grid.Row="6"
+              Visibility="{Binding ShowLeaderLength, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Padding="4,3" VerticalAlignment="Center"
+                     BorderBrush="#BBBBBB"
+                     Text="{Binding LeaderLengthText, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0"
+                       Foreground="#777777" FontSize="11" TextWrapping="Wrap"
+                       Text="Length of the shoulder segment of the leader, in inches. Attached End only."/>
+        </Grid>
+
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
+                    Click="Cancel_Click" IsCancel="True" Margin="0,0,6,0"/>
+            <Button Content="OK" Style="{StaticResource PrimaryButton}"
+                    Click="Ok_Click" IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

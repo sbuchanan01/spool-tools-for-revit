@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>SpoolTools</AssemblyName>
+    <RootNamespace>SpoolTools</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64</Platforms>
+
+    <!-- Versioning surface — bump on release. -->
+    <Version>1.0.0</Version>
+    <Authors>Scott Buchanan</Authors>
+    <Product>Spool Tools for Revit</Product>
+  </PropertyGroup>
+
+  <!--
+    Revit target version. Defaults to 2026; override to 2025 (or any other
+    supported version) at the command line:
+      dotnet build /p:RevitVersion=2025
+    Output goes into a per-version sub-folder under bin/ so 2025 and 2026
+    builds don't overwrite each other. A compile-time symbol
+    REVIT<version> (e.g. REVIT2025) is also defined for any source that
+    needs to branch on the API surface.
+  -->
+  <PropertyGroup>
+    <RevitVersion Condition="'$(RevitVersion)' == ''">2026</RevitVersion>
+    <RevitInstallPath Condition="'$(RevitInstallPath)' == ''">C:\Program Files\Autodesk\Revit $(RevitVersion)</RevitInstallPath>
+    <OutputPath>bin\$(Configuration)-Revit$(RevitVersion)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Configuration)-Revit$(RevitVersion)\</IntermediateOutputPath>
+    <DefineConstants>$(DefineConstants);REVIT$(RevitVersion)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>$(RevitInstallPath)\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>$(RevitInstallPath)\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    Auto-deploy the built DLL + .addin manifest to the user's Revit
+    Addins folder on Debug builds, version-matched to RevitVersion.
+    Skip if Revit is open (DLL locked).
+    Release builds don't auto-deploy — those go to GitHub Releases.
+  -->
+  <Target Name="DeployToRevitAddins" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\$(RevitVersion)\"
+          SkipUnchangedFiles="true"
+          ContinueOnError="WarnAndContinue" />
+    <Copy SourceFiles="$(ProjectDir)SpoolTools.addin"
+          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\$(RevitVersion)\"
+          SkipUnchangedFiles="true"
+          ContinueOnError="WarnAndContinue" />
+  </Target>
+
+</Project>

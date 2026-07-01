@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Spool Tools for Revit</Name>
+    <Assembly>SpoolTools.dll</Assembly>
+    <ClientId>0336A3AA-0A66-43FF-B212-F4B154B3582D</ClientId>
+    <FullClassName>SpoolTools.SpoolToolsApp</FullClassName>
+    <VendorId>SPTLS</VendorId>
+    <VendorDescription>Spool Tools for Revit 2026</VendorDescription>
+  </AddIn>
+</RevitAddIns>

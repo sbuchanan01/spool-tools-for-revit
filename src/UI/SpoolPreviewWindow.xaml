@@ -1,0 +1,65 @@
+<Window x:Class="SpoolTools.UI.SpoolPreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Spool Preview"
+        Width="900" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2E8B2E"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"    Value="22,7"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+        <Style x:Key="WarnButton" TargetType="Button">
+            <Setter Property="Background" Value="#C0392B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"    Value="22,7"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"     Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" FontSize="12" Foreground="#555555" Margin="0,0,0,8"
+                   TextWrapping="Wrap"
+                   Text="{Binding HintText}"/>
+
+        <Border Grid.Row="1"
+                x:Name="PreviewHost"
+                BorderBrush="#888888" BorderThickness="1"
+                Background="#1F1F1F"/>
+
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="11"
+                       Foreground="#888888" Text="{Binding StatusText}"
+                       TextWrapping="Wrap"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="Discard" Style="{StaticResource WarnButton}"
+                        Click="Discard_Click" Margin="0,0,6,0"
+                        ToolTip="Roll back the spool entirely (sheet, views, viewports, schedule mods, tags, Item Number, Spool Number, Fabrication Status, pin state). You'll return to the Create Spool dialog with the same settings."/>
+                <Button Content="Accept" Style="{StaticResource PrimaryButton}"
+                        Click="Accept_Click" IsDefault="True"
+                        ToolTip="Keep the spool. The Create Spool dialog closes."/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
