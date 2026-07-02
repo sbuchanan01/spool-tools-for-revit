@@ -528,6 +528,14 @@ namespace SpoolTools.UI
             MaxLengthEnabled = settings.SpoolerRuleMaxLengthEnabled;
             MaxLengthText    = settings.SpoolerRuleMaxLengthText    ?? "20";
 
+            // Renumbering defaults — same SpoolSettings keys the per-run
+            // dialogs already read on open and persist back on close.
+            RenumberEnabledDefault                = settings.RenumberEnabled;
+            RenumberStartingNumberText            = settings.RenumberStartingNumber.ToString();
+            RenumberUseSameForIdenticalDefault    = settings.RenumberUseSameForIdentical;
+            RenumberUseLengthAsSeparatorDefault   = settings.RenumberUseLengthAsSeparator;
+            IncludeWeldsDefault                   = settings.IncludeWelds;
+
             // Status param — initial selection picks the persisted name
             // when it's in the candidate list, otherwise the "(none)"
             // sentinel. Empty / null persisted → "(none)".
@@ -694,6 +702,40 @@ namespace SpoolTools.UI
         public bool   MaxLengthEnabled { get => _maxLengthEnabled; set => SetField(ref _maxLengthEnabled, value); }
         public string MaxLengthText    { get => _maxLengthText;    set => SetField(ref _maxLengthText,    value ?? string.Empty); }
 
+        // ── Renumbering defaults (seeded into Create Spool + The Spooler) ─────
+
+        private bool   _renumberEnabledDefault;
+        private string _renumberStartingNumberText           = "1";
+        private bool   _renumberUseSameForIdenticalDefault   = true;
+        private bool   _renumberUseLengthAsSeparatorDefault;
+        private bool   _includeWeldsDefault                  = true;
+
+        public bool   RenumberEnabledDefault
+        {
+            get => _renumberEnabledDefault;
+            set => SetField(ref _renumberEnabledDefault, value);
+        }
+        public string RenumberStartingNumberText
+        {
+            get => _renumberStartingNumberText;
+            set => SetField(ref _renumberStartingNumberText, value ?? "1");
+        }
+        public bool   RenumberUseSameForIdenticalDefault
+        {
+            get => _renumberUseSameForIdenticalDefault;
+            set => SetField(ref _renumberUseSameForIdenticalDefault, value);
+        }
+        public bool   RenumberUseLengthAsSeparatorDefault
+        {
+            get => _renumberUseLengthAsSeparatorDefault;
+            set => SetField(ref _renumberUseLengthAsSeparatorDefault, value);
+        }
+        public bool   IncludeWeldsDefault
+        {
+            get => _includeWeldsDefault;
+            set => SetField(ref _includeWeldsDefault, value);
+        }
+
         // ── Spool status (project text param + value) ─────────────────────────
 
         /// <summary>Sentinel for "do not write any status" — first entry
@@ -821,6 +863,15 @@ namespace SpoolTools.UI
             s.SpoolerRuleMaxWeightLbText  = _maxWeightLbText ?? string.Empty;
             s.SpoolerRuleMaxLengthEnabled = _maxLengthEnabled;
             s.SpoolerRuleMaxLengthText    = _maxLengthText ?? string.Empty;
+
+            // Renumbering defaults — written to the same SpoolSettings keys
+            // the per-run dialogs read on open.
+            s.RenumberEnabled              = _renumberEnabledDefault;
+            s.RenumberStartingNumber       =
+                int.TryParse(_renumberStartingNumberText, out var rsn) && rsn > 0 ? rsn : 1;
+            s.RenumberUseSameForIdentical  = _renumberUseSameForIdenticalDefault;
+            s.RenumberUseLengthAsSeparator = _renumberUseLengthAsSeparatorDefault;
+            s.IncludeWelds                 = _includeWeldsDefault;
 
             // Status — sentinel maps to empty (= skip the write entirely).
             // SpoolService treats empty name as "user opted out".

@@ -281,6 +281,55 @@
                                        VerticalAlignment="Center" Foreground="#777777"
                                        Text="ft  (e.g. 10.5 or 10-6)"/>
                         </Grid>
+
+                        <!-- ── Renumbering defaults ────────────────────── -->
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0,16,0,4" Text="Renumbering"/>
+                        <TextBlock Style="{StaticResource HelpText}"
+                                   Text="Default Renumber options seeded into Create Spool and The Spooler when they open. Changes made in the per-run dialogs update these defaults on close."/>
+
+                        <CheckBox Content="Renumber 'Item Number' by default"
+                                  IsChecked="{Binding RenumberEnabledDefault}"
+                                  Margin="0,2,0,4"
+                                  ToolTip="When on, both per-run dialogs open with their Renumber toggle already checked. Users can still turn it off per run."/>
+
+                        <Grid IsEnabled="{Binding RenumberEnabledDefault}" Margin="20,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                                       Margin="0,2,0,4" Text="Starting Number:"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Width="80" Margin="0,2,0,4"
+                                     Text="{Binding RenumberStartingNumberText, UpdateSourceTrigger=LostFocus}"
+                                     ToolTip="First-part number for each spool. Subsequent parts get +1 (unless the identical-parts rule below applies). Resets per spool in The Spooler."/>
+
+                            <CheckBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                      Content="Use same number for identical parts"
+                                      Margin="0,2,0,2"
+                                      IsChecked="{Binding RenumberUseSameForIdenticalDefault}"
+                                      ToolTip="When on, parts with the same CID + size + Item Description + Item Code collapse to share one number. When off, every part gets its own sequential number."/>
+
+                            <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                      Content="Include Welds"
+                                      Margin="0,2,0,2"
+                                      IsChecked="{Binding IncludeWeldsDefault}"
+                                      ToolTip="When on (default), every selected part is renumbered and tagged. When off, parts whose Product Range is 'Joints' (welds, joint fittings) are skipped for Item Number renumbering AND tag placement — they're still pinned and shown in the views."/>
+
+                            <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                                      Content="Use length as a separator"
+                                      Margin="20,2,0,2"
+                                      IsEnabled="{Binding RenumberUseSameForIdenticalDefault}"
+                                      IsChecked="{Binding RenumberUseLengthAsSeparatorDefault}"
+                                      ToolTip="Only meaningful when 'Use same number for identical parts' is on. Pipes of different centerline lengths get different numbers (rounded to 1/16&quot;); non-pipe parts ignore length."/>
+                        </Grid>
                     </StackPanel>
 
                     <!-- ── Bottom-right: Leader Defaults + Dimensions ──── -->
