@@ -52,22 +52,34 @@ to close if any required field is unset.
 
 The dialog is organised in two columns.
 
-## Top row — Spool Output Defaults + Default Views to Create
-
-![Spool Output Defaults + Default Views](screenshots/02-config-output-and-views.png)
+## Left column
 
 ### Spool Output Defaults
 
 - **Titleblock** (required) — the sheet family used when a spool
   creates a sheet. Only titleblocks already loaded into the project
   appear.
-- **Edit Drawable Region** — sketch the rectangle **inside the
-  titleblock** where views may land. Per-titleblock (11×17 and 24×36
-  keep separate regions). While the sketch is active the config
-  dialog hides itself so you're not fighting for focus with Revit's
-  sketch tool.
+- **Edit Drawable Region** — sketches **two rectangles inside the
+  titleblock**, one after the other:
+    1. The **view region** — where the ortho + iso viewports may
+       land. The tool packs the ticked views into a 3×3 grid inside
+       this rectangle and picks a scale that fits.
+    2. The **schedule region** — where the schedule sits. The
+       schedule is anchored at the top-left of this rectangle
+       (inset by a 1/4″ buffer) and grows down and right from there.
+
+    Both rectangles are persisted **per titleblock family**, so an
+    11 × 17 spool sheet and a 24 × 36 spool sheet keep their own
+    pairs. While the sketch is active the Spool Config dialog hides
+    itself so you're not fighting for focus with Revit's sketch tool.
 - **Schedule** (required) — the Bill of Materials schedule (or
-  equivalent) that gets placed on every spool sheet.
+  equivalent) that gets placed on every spool sheet. If the schedule's
+  natural total width doesn't fit inside the schedule region you
+  drew, the tool shrinks the schedule's longest-text column to make
+  it fit (floored at 2″). That column-width change is **global to
+  the schedule** — it affects every other sheet that uses this
+  schedule. The Discard branch of Preview restores the original
+  column widths; Create Spool without a Preview keeps them.
 - **Default View Scale** — starting scale for the ortho + iso views.
   Per-run override lives in Create Spool.
 - **View Template** — applied to every created view. Blank is
@@ -80,10 +92,6 @@ The dialog is organised in two columns.
   common historical default; pick `(none — skip status
   write)` to opt out entirely.
 
-## Middle row — Spool Limits + Leader Defaults
-
-![Spool Limits + Leader Defaults](screenshots/03-config-limits-and-leader.png)
-
 ### Spool Limits
 
 Upper bounds shared by both tools. Create Spool warns when a single
@@ -95,10 +103,6 @@ The Spooler uses the same values to auto-split a batch run.
 - **Max Length** — longest dimension of the union bounding box of all
   parts. Enable + type a value. Accepts `10.5` (decimal feet) or
   `10-6` (feet-inches).
-
-## Bottom row — Renumbering + Dimensions
-
-![Renumbering + Dimensions](screenshots/04-config-renumbering-and-dimensions.png)
 
 ### Renumbering
 
@@ -121,6 +125,8 @@ defaults on close.
 - **Use length as a separator** — pipes of different centreline
   lengths (rounded to 1/16″) get different numbers. Only meaningful
   when the identical-parts rule is on.
+
+## Right column
 
 ### Default Views to Create
 
@@ -160,10 +166,6 @@ Defaults for the per-run Dimensions row. This feature ships as
 "not deployed" in v1.0.0 — the engine exists but is disabled at
 the config level pending further tuning.
 
-## Full-width — The Spooler batch templates
-
-![Spooler Batch Templates](screenshots/05-config-spooler-templates.png)
-
 ### The Spooler — Batch Templates
 
 Drop any of these **properties** into the templates below; each
@@ -199,8 +201,6 @@ Tab-cycle, ctrl-click, saved selection), then click **Create Spool**.
 
 ## Selection
 
-![Create Spool selection area](screenshots/06-create-selection.png)
-
 The dialog opens showing the current selection count. Two buttons
 adjust the pool without closing the dialog:
 
@@ -217,8 +217,6 @@ parts are unaffected until you explicitly DeSpool it.
 
 ## Spool Number
 
-![Spool Number section](screenshots/07-create-numbering.png)
-
 - **Number** (required) — auto-suggested from the service +
   identifier +  next sequence. Edit freely; the number becomes the
   sheet name and is written into every part's `Spool Number`
@@ -228,23 +226,17 @@ parts are unaffected until you explicitly DeSpool it.
 
 ## Renumber Item Number
 
-![Renumber Item Number](screenshots/08-create-renumber.png)
-
 Same section that lives in Spool Config (see [Renumbering](#renumbering)
 above). Values seed from Spool Config on open. Per-run adjustments
 persist back on close.
 
 ## Views to Create
 
-![Views to Create with preview](screenshots/09-create-views.png)
-
 Tick the ortho + iso views you want on the sheet. A live preview to
 the right shows a schematic of the eight positions relative to the
 part axis.
 
-## Sheet + Footer
-
-![Sheet section + footer with Use Assemblies](screenshots/10-create-sheet-footer.png)
+## Sheet
 
 - **Sheet #** and **Sheet Name** (required) — the sheet the views
   land on. Auto-populates from the Spool Number; edit if your
@@ -255,16 +247,83 @@ part axis.
   radios, leader length in inches, Tag Offset in inches, and
   Enhanced Tag Placement).
 
+## Footer
+
+Four buttons plus **Use Assemblies**:
+
 - **Spool Config…** — shortcut to open the shared Spool Config
   dialog if you need to change a project default mid-run. Changes
   saved there refresh this dialog automatically.
-- **Cancel** — closes without touching the model.
-- **Preview** — builds the spool, then opens a preview window
-  (Accept keeps it as one undo step; Discard rolls everything back).
-- **Create Spool** — builds directly with no preview. Fastest path.
-- **Use Assemblies** — sits below Create Spool. When on, the spool
-  becomes a Revit `AssemblyInstance` instead of a normal sheet with
-  ad-hoc 3D views. Same visual result; different Revit primitive.
+- **Cancel** — closes without touching the model. Nothing you did in
+  the dialog persists.
+- **Preview** — same build as Create Spool, but pauses on a preview
+  window (**Accept** keeps everything as one undo step; **Discard**
+  rolls the whole build back and restores schedule column widths).
+  Slower path — pick this when you want to eyeball layout before
+  committing.
+- **Create Spool** — the primary action, builds the spool directly
+  with no preview. Everything runs inside one Revit transaction
+  group, so a single Ctrl+Z reverses the entire operation. Detailed
+  steps below.
+- **Use Assemblies** — sits below Create Spool as a modifier. When
+  on, the spool becomes a Revit `AssemblyInstance` (parts become
+  assembly members, views become assembly views on an assembly
+  sheet) instead of the ad-hoc sheet + 3D view path. Same visual
+  result; different Revit primitive. Downstream tools that read
+  AssemblyInstance (schedules that reference `Assembly Name`,
+  ISOGEN exports that key off assemblies, DeSpooler cascades) key
+  off this choice.
+
+### What Create Spool actually does
+
+Every step below is inside one transaction group. Ctrl+Z reverses
+the whole thing in one shot.
+
+1. **Renumber Item Numbers** — if the Renumber toggle is on, every
+   selected part's `Item Number` parameter is rewritten sequentially
+   starting from the configured Starting Number, applying the
+   identical-parts collapse and length-separator rules.
+2. **Write Spool Number + status** — the configured `Spool Number`
+   parameter is set on every part to the value from the Number
+   field. If Spool Config has a status parameter picked (default
+   `Fabrication Status = Issued for Fabrication`), that's written
+   too.
+3. **Pin the parts** — spooled parts get pinned so they can't drift
+   after the spool ships. DeSpooler unpins them when reverting.
+4. **Create the sheet** — a new `ViewSheet` at the configured
+   titleblock, named from `Sheet #` + `Sheet Name`.
+5. **Create the ortho + iso views** — one 3D view per ticked box
+   (Top / Bottom / Left / Right / Front / Back / NW / NE / SW / SE
+   as applicable). Each view has its section box set to the union
+   bounding box of the spool's parts, the configured View Template
+   applied, and iso views get their orientation locked so they
+   can't be accidentally rotated later.
+6. **Lay out the viewports** — the ticked views are packed into a
+   3 × 3 grid inside the **view region** you sketched on the
+   titleblock (third-angle projection convention — Top above Front,
+   Right beside Front, isos in the corners). A single view scale
+   is chosen so every view fits its cell.
+7. **Place tags** — if a Tag Family is configured and Interactive
+   Tagging is off, tags auto-place using the Enhanced Tag Placement
+   algorithm or the historical "one Tag Offset above the part"
+   fallback. If Interactive Tagging is on, the tool walks each view
+   and prompts you to click a location per tag in Item Number order.
+8. **Place the schedule** — a `ScheduleSheetInstance` for the
+   configured schedule is placed at the top-left corner of the
+   **schedule region** you sketched on the titleblock. If the
+   schedule's natural width exceeds the region, the longest-text
+   column shrinks to fit (see [Schedule](#spool-output-defaults)
+   above for the column-width caveat).
+9. **Assemblies branch** — if Use Assemblies is on, steps 4-8 run
+   inside a Revit `AssemblyInstance` instead of on a standalone
+   sheet.
+10. **Commit** — the transaction group closes and the sheet opens
+    for review.
+
+If any required Spool Config field is missing at Create time (no
+titleblock, no schedule, no drawn regions, etc.) the operation
+aborts before any of these steps run — the button is greyed
+out and its tooltip tells you what's missing.
 
 ---
 
@@ -278,24 +337,18 @@ riser / a whole service in one pass.
 
 ## Selection pool
 
-![Spooler selection pool](screenshots/11-spooler-pool.png)
-
 Header row shows the pool the walk stays inside. **Pick More…** adds
 parts; **Reset** clears it. Preselection at command launch seeds the
 pool; from-scratch launches show 0 selected and wait for a Pick More.
 
 ## Spool Numbering & Naming
 
-![Spool Numbering & Naming](screenshots/12-spooler-numbering.png)
-
 Compact one-line status of the current templates + Identifier +
 starting sequence + starting sheet, all inherited from Spool Config.
 Click **Edit** to open a popup for one-off overrides for this batch
 run. Most users leave this alone and edit Spool Config instead.
 
-## Selection + Auto-Split Rules
-
-![Selection and Auto-Split Rules](screenshots/13-spooler-selection-and-rules.png)
+## Selection
 
 - **Start element** (required) — click **Pick start…** and pick the
   element to begin the walk. Typically an open-end or the branch off
@@ -311,7 +364,7 @@ run. Most users leave this alone and edit Spool Config instead.
 The status line to the right reports the walk result:
 `✓ 4 break(s) — 5 spool(s) on main flow`.
 
-### Auto-Split Rules
+## Auto-Split Rules
 
 Optional constraints that further split a spool when it exceeds a
 threshold:
@@ -330,22 +383,72 @@ threshold:
   as Create Spool; runs per spool with the starting number resetting
   each time.
 
-## Preview + Footer
-
-![Preview + footer with Create Spools](screenshots/14-spooler-preview.png)
+## Preview
 
 3D view coloured per spool partition. **Refresh** re-runs the walk
 + split (useful after adjusting rules or breaks).
 
-- **Sheet numbers / sheet titles / names** — a rolling status line
-  showing the numbering that will be applied on Create.
-- **Spool Config…** — shortcut to project defaults.
+## Footer
+
+- **Sheet numbers / sheet titles / names** — three rolling status
+  lines showing the exact Spool Numbers, Sheet Numbers, and Spool
+  Names that will land after the templates are resolved. Read them
+  before hitting Create; if the format is wrong, adjust the templates
+  in Spool Config (or the per-run **Edit** popup) and Refresh.
+- **Spool Config…** — shortcut to open the shared project defaults.
 - **Cancel** — closes without touching the model.
-- **Create Spools** — kicks off the batch. Each spool is one
-  transaction; overall run wraps them in a transaction group so the
-  whole batch is one Ctrl+Z.
+- **Create Spools** — the primary action. Runs the walk-and-split
+  to determine the final spool set, then builds every spool in one
+  batch. Detailed steps below.
 - **Use Assemblies** — right-aligned below Create Spools, same
-  meaning as in Create Spool.
+  meaning as in Create Spool — each spool becomes a Revit
+  `AssemblyInstance` instead of a standalone sheet with 3D views.
+
+### What Create Spools actually does
+
+The whole batch is wrapped in one transaction group. Ctrl+Z reverses
+the entire run in one shot.
+
+1. **Walk the network** — starting from the picked Start element,
+   the tool walks the connector graph outward through every part in
+   the selection pool. Parts outside the pool cap the walk.
+2. **Split into candidate spools** — the walk is chopped into
+   candidates at (a) every Break element you picked, (b) every
+   branch off a tee, and (c) any Auto-Split Rules threshold hit
+   (At Field Welds / Max Weight / Max Length).
+3. **Resolve numbers, names, and sheet numbers** — for each
+   candidate the templates run through the token engine.
+   `{N}` increments per spool, so the first spool of a CHW batch
+   with defaults becomes `CHW-001-01` on sheet `S1`, the second
+   `CHW-001-02` on sheet `S2`, and so on. `{Number}` in the name
+   template resolves to whatever the number template just produced.
+4. **For each spool, build it** — for every candidate the tool runs
+   the same downstream pipeline as Create Spool:
+   - Renumber Item Numbers if the toggle is on (**per spool** — the
+     Starting Number resets for each spool, so every spool's parts
+     start at 1 unless you say otherwise).
+   - Write Spool Number + configured status parameter to every
+     part in that spool.
+   - Pin the parts.
+   - Create a new sheet from the resolved Sheet Number + Name.
+   - Create the ortho + iso views ticked in Spool Config's
+     **Default Views to Create**.
+   - Lay them out in the view region, place tags, place the
+     schedule at the schedule region.
+5. **Field-weld post-pass** — if **Convert Spool Joining Welds to
+   Field Welds** is on, every weld sitting at a spool boundary is
+   flipped to a Field Weld on the model so downstream QA / ISOGEN
+   sees the same boundary the tool used to split.
+6. **Commit** — the transaction group closes. All resulting sheets
+   are ready for review; the project browser shows them grouped by
+   name under `Sheets (all)`.
+
+If any required Spool Config field is missing (titleblock, schedule,
+drawn regions, etc.) the Create Spools button is greyed out and its
+tooltip tells you what's missing. If any spool in the batch would
+fail (e.g. its part set overlaps a spool that already exists), the
+whole batch aborts before touching the model — nothing is
+half-built.
 
 ---
 
