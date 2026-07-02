@@ -268,36 +268,61 @@ namespace SpoolTools.UI
             }
 
             const string body =
-                "When ON, the placement engine does two things differently:\n" +
+                "When ON, the placement engine tries hard to keep each tag " +
+                "clear of the pipe and clear of every other tag, using the " +
+                "shape of the part to pick a good starting direction.\n" +
                 "\n" +
-                "1) Bounding-box avoidance.\n" +
-                "Before placing the first tag on a view, every part's projected " +
-                "footprint is cached. Each tag then tries up to 12 candidate " +
-                "positions around its part (up, right, down, left at 1\", then " +
-                "the four diagonals, then the four cardinal directions at 2\"). " +
-                "The first candidate whose tag bbox doesn't overlap any neighbouring " +
-                "part bbox or any already-placed tag bbox wins. If none of the 12 " +
-                "clear, it falls back to the default 1\" up position. The tag's own " +
-                "part bbox is excluded from the clash check so leader length stays " +
-                "at the configured offset in open areas.\n" +
+                "1) Candidate search — 24 directions × 3 tiers.\n" +
+                "Before the first tag is placed on a view, every part's " +
+                "projected footprint is cached. Each tag then tries a grid " +
+                "of candidate positions:\n" +
                 "\n" +
-                "2) Shape-aware preferences.\n" +
-                "Before the 12 generic candidates are tried, the engine looks at " +
-                "the part's shape:\n" +
+                "  • 24 compass directions at 15° increments around the " +
+                "part.\n" +
+                "  • 3 offset tiers — 1×, 1.5×, and 2× the Tag Offset value " +
+                "from Leader Settings.\n" +
+                "  • Ordering is tier-major: every direction is tried at " +
+                "1× before any direction is tried at 1.5×, so tags stay as " +
+                "close to the part as possible.\n" +
+                "  • Shape-aware direction (see #2) is tried FIRST at each " +
+                "tier, before the 24 compass directions.\n" +
                 "\n" +
-                "  • Elbows — the inside (concave) side of the bend is tried " +
-                "first, so the outside is left free for the long dim line. The " +
-                "direction is computed as the negative of the sum of the two " +
-                "connector directions.\n" +
-                "  • Tees — a 45° angle between the branch direction and " +
-                "one run leg is tried first. The leg pointing most 'up' in the " +
-                "view is picked so every tee in a single view lands on the " +
-                "same side of its branch.\n" +
-                "  • Other parts — no preference; the 12 generic candidates " +
+                "The first candidate that clears wins. \"Clears\" means:\n" +
+                "\n" +
+                "  • Tag bbox overlaps neighbouring part bboxes by ≤10%.\n" +
+                "  • Tag bbox overlaps other already-placed tags by ≤10%.\n" +
+                "  • The leader line from part to tag doesn't cross another " +
+                "part or another tag (Liang–Barsky segment/bbox test).\n" +
+                "\n" +
+                "Tags are placed in priority order by Item Number so the " +
+                "\"1\"s and \"2\"s of a view get the best real estate. If a " +
+                "tag never finds a fully clear slot, the least-bad candidate " +
+                "(lowest weighted overlap + leader-crossing penalty) wins " +
+                "instead of the engine giving up.\n" +
+                "\n" +
+                "2) Shape-aware preferred direction.\n" +
+                "Before the 24 compass directions, the engine looks at the " +
+                "part's shape:\n" +
+                "\n" +
+                "  • Pipes — perpendicular to the pipe's axis (either side), " +
+                "picking the side with less clutter.\n" +
+                "  • Elbows — the INSIDE (concave) side of the bend, so the " +
+                "outside stays free for the long dim line. The direction is " +
+                "the sum of the two connector directions.\n" +
+                "  • Tees — the bisector between the branch and the run, so " +
+                "the tag lands in the open wedge instead of on top of any leg.\n" +
+                "  • Other parts — no preference; the 24 compass directions " +
                 "run as-is.\n" +
                 "\n" +
-                "When OFF, every tag goes 1\" above its part on the sheet " +
-                "regardless of crowding — the historical behaviour.";
+                "3) Free-End leader anchor override.\n" +
+                "When Leader Settings is set to Free End, pipes and elbows " +
+                "anchor the leader endpoint at the part's centre instead of " +
+                "letting Revit auto-pick the nearest surface — otherwise the " +
+                "leader can attach to a weld or a connector face and the " +
+                "tag reads as pointing at the fitting next door.\n" +
+                "\n" +
+                "When OFF, every tag goes one Tag Offset above its part on " +
+                "the sheet regardless of crowding — the historical behaviour.";
 
             var scroll = new ScrollViewer
             {
