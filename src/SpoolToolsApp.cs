@@ -77,6 +77,23 @@ namespace SpoolTools
                     Image      = RibbonIconFactory.Spooler(16),
                 };
 
+                var despoolerButton = new PushButtonData(
+                    name:         "DeSpooler",
+                    text:         "DeSpooler",
+                    assemblyName: asm,
+                    className:    "SpoolTools.DeSpoolerCommand")
+                {
+                    ToolTip = "Revert a spool: delete its sheets/views, clear Spool Number + status, unpin parts.",
+                    LongDescription =
+                        "Reads Spool Number from the selected fabrication parts, finds " +
+                        "every part in the doc with a matching Spool Number, plus the " +
+                        "sheet(s), view(s), and assembly the spool ships as. Shows a " +
+                        "confirmation with counts before touching the model. Whole " +
+                        "operation is one Ctrl+Z step.",
+                    LargeImage = RibbonIconFactory.DeSpool(32),
+                    Image      = RibbonIconFactory.DeSpool(16),
+                };
+
                 var spoolConfigButton = new PushButtonData(
                     name:         "SpoolConfig",
                     text:         "Spool\nConfig",
@@ -97,6 +114,7 @@ namespace SpoolTools
 
                 panel.AddItem(createSpoolButton);
                 panel.AddItem(spoolerButton);
+                panel.AddItem(despoolerButton);
                 panel.AddItem(spoolConfigButton);
             }
             catch (Exception ex)

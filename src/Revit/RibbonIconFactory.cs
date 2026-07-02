@@ -37,6 +37,7 @@ namespace SpoolTools.Revit
         private static readonly Color ToolGray     = Color.FromRgb(0x46, 0x59, 0x6E); // diagnostics
         private static readonly Color PipeSteel    = Color.FromRgb(0x4E, 0x73, 0x99); // spool
         private static readonly Color WarnRed      = Color.FromRgb(0xB0, 0x3A, 0x2E); // wipe / destructive
+        private static readonly Color BurstYellow  = Color.FromRgb(0xF5, 0xC5, 0x18); // explosion core
 
         // ── Public API ─────────────────────────────────────────────────────
         // One method per ribbon icon; each returns a frozen ImageSource
@@ -156,6 +157,17 @@ namespace SpoolTools.Revit
         /// generic Settings icon but colour-keyed to the Spooling panel
         /// so it visually groups with Create Spool / The Spooler rather
         /// than reading as a global tool.</summary>
+        /// <summary>Same elbow-spool base as <see cref="Spool"/> but with
+        /// the two pipe legs pulled back from the elbow (short gaps) and
+        /// a red "pow" starburst overlaid on the elbow — reads as "the
+        /// spool is being blown apart", matching what the command
+        /// actually does. Drawn glyph rather than a Segoe MDL2 character
+        /// because the eraser PUA codepoint gets stripped on some write
+        /// paths and renders blank; a StreamGeometry never risks that.
+        /// </summary>
+        public static ImageSource DeSpool(int size) =>
+            Render(size, DrawDeSpool);
+
         public static ImageSource SpoolGear(int size) =>
             Render(size, (dc, s) => DrawGlyph(dc, s, "", PipeSteel));
 
@@ -407,6 +419,97 @@ namespace SpoolTools.Revit
             dc.DrawLine(capPen,
                 new Point(elbowX - capHalf, topY),
                 new Point(elbowX + capHalf, topY));
+        }
+
+        /// <summary>DeSpooler variant of <see cref="DrawSpool"/>. Same
+        /// three-piece layout (horizontal leg + elbow + vertical leg)
+        /// with a big visible gap between each leg and the elbow, plus
+        /// a red "prohibited" ring (circle + diagonal slash) overlaid on
+        /// the assembly.</summary>
+        private static void DrawDeSpool(DrawingContext dc, int size)
+        {
+            double w = size, h = size;
+            double pipeWidth = Math.Max(2.0, size * 0.18);
+
+            var pipePen = new Pen(FreezeBrush(PipeSteel), pipeWidth)
+            {
+                StartLineCap = PenLineCap.Flat,
+                EndLineCap   = PenLineCap.Flat,
+                LineJoin     = PenLineJoin.Round,
+            };
+            pipePen.Freeze();
+
+            double leftX   = w * 0.14;
+            double bottomY = h * 0.76;
+            double elbowX  = w * 0.66;
+            double topY    = h * 0.14;
+            double elbowR  = w * 0.14;
+
+            double gap = Math.Max(3.5, size * 0.13);
+
+            var elbowGeom = new StreamGeometry();
+            using (var ctx = elbowGeom.Open())
+            {
+                ctx.BeginFigure(
+                    new Point(elbowX - elbowR, bottomY),
+                    isFilled: false, isClosed: false);
+                ctx.ArcTo(
+                    new Point(elbowX, bottomY - elbowR),
+                    new Size(elbowR, elbowR),
+                    rotationAngle: 0,
+                    isLargeArc: false,
+                    sweepDirection: SweepDirection.Counterclockwise,
+                    isStroked: true,
+                    isSmoothJoin: false);
+            }
+            elbowGeom.Freeze();
+            dc.DrawGeometry(null, pipePen, elbowGeom);
+
+            dc.DrawLine(pipePen,
+                new Point(leftX, bottomY),
+                new Point(elbowX - elbowR - gap, bottomY));
+            dc.DrawLine(pipePen,
+                new Point(elbowX, topY),
+                new Point(elbowX, bottomY - elbowR - gap));
+
+            double capHalf = pipeWidth * 0.85;
+            var capPen = new Pen(FreezeBrush(PipeSteel), Math.Max(1.5, size * 0.07))
+            {
+                StartLineCap = PenLineCap.Round,
+                EndLineCap   = PenLineCap.Round,
+            };
+            capPen.Freeze();
+            dc.DrawLine(capPen,
+                new Point(leftX, bottomY - capHalf),
+                new Point(leftX, bottomY + capHalf));
+            dc.DrawLine(capPen,
+                new Point(elbowX - capHalf, topY),
+                new Point(elbowX + capHalf, topY));
+
+            // Prohibited ring (⊘) centred on the elbow's outside corner
+            // so it visually wraps the whole elbow + adjacent gaps.
+            double ringCX = elbowX - elbowR * 0.5;
+            double ringCY = bottomY - elbowR * 0.5;
+            double ringR  = size * 0.30;
+
+            var ringBrush = FreezeBrush(WarnRed);
+            var ringPen = new Pen(ringBrush, Math.Max(2.0, size * 0.08))
+            {
+                StartLineCap = PenLineCap.Round,
+                EndLineCap   = PenLineCap.Round,
+                LineJoin     = PenLineJoin.Round,
+            };
+            ringPen.Freeze();
+
+            dc.DrawEllipse(
+                null, ringPen,
+                new Point(ringCX, ringCY),
+                ringR, ringR);
+
+            double half = ringR / Math.Sqrt(2.0);
+            dc.DrawLine(ringPen,
+                new Point(ringCX - half, ringCY - half),
+                new Point(ringCX + half, ringCY + half));
         }
 
         /// <summary>Two offset elbow spools stacked diagonally so the

@@ -252,17 +252,7 @@
         </Border>
 
         <!-- ═══ SHEET SETUP ═══ -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Style="{StaticResource SectionHeader}" Text="Sheet"/>
-            <CheckBox  Grid.Column="1" Content="Use Assemblies"
-                       VerticalAlignment="Center" Margin="0,8,0,2"
-                       IsChecked="{Binding UseAssemblies}"
-                       ToolTip="When on, the spool becomes a Revit AssemblyInstance — its parts become members of an assembly, and Revit's AssemblyViewUtils builds the views + sheet (instead of ad-hoc 3D views on a normal sheet). All other settings (titleblock, drawable region, schedule, scale, tag, leader, renumber, view template, Include Welds) apply identically. Parts already in another assembly will cause the create to abort with the conflict list."/>
-        </Grid>
+        <TextBlock Style="{StaticResource SectionHeader}" Text="Sheet"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="110"/>
@@ -402,35 +392,46 @@
                     <TextBlock FontSize="10" Foreground="#999999" TextWrapping="Wrap"
                                Text="*Required setting"/>
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="Spool Config…" Style="{StaticResource SecondaryButton}"
-                            Click="SpoolConfig_Click" Margin="0,0,12,0"
-                            ToolTip="Open the shared Spool Config dialog to edit project-level defaults (titleblock, schedule, default scale, view directions, view template, tag family, leader defaults, batch templates). Changes take effect the next time you open this dialog."/>
-                    <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
-                            Click="Cancel_Click" IsCancel="True" Margin="0,0,6,0"/>
-                    <!-- Tooltip falls back to CanCreateBlocker when the
-                         button is disabled — hover over a greyed
-                         Preview / Create Spool and Revit will tell
-                         you which required field is still unset. -->
-                    <Button Content="Preview" Style="{StaticResource SecondaryButton}"
-                            Click="Preview_Click" Margin="0,0,6,0"
-                            IsEnabled="{Binding CanCreate}"
-                            ToolTipService.ShowOnDisabled="True">
-                        <Button.ToolTip>
-                            <ToolTip>
-                                <TextBlock>
-                                    <Run Text="Build the spool, then open a preview window. Accept keeps it (one undo step); Discard rolls everything back."/>
-                                    <LineBreak/>
-                                    <Run Foreground="#C0392B" Text="{Binding CanCreateBlocker, Mode=OneWay}"/>
-                                </TextBlock>
-                            </ToolTip>
-                        </Button.ToolTip>
-                    </Button>
-                    <Button Content="Create Spool" Style="{StaticResource PrimaryButton}"
-                            Click="CreateSpool_Click" IsDefault="True"
-                            IsEnabled="{Binding CanCreate}"
-                            ToolTipService.ShowOnDisabled="True"
-                            ToolTip="{Binding CanCreateBlocker}"/>
+                <!-- Right column: primary/secondary buttons on top,
+                     Use Assemblies checkbox on a second line right-
+                     aligned so it visually attaches to Create Spool —
+                     it's the "how" for that action. Mirrors the
+                     Spooler dialog's footer layout. -->
+                <StackPanel Grid.Column="1">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Spool Config…" Style="{StaticResource SecondaryButton}"
+                                Click="SpoolConfig_Click" Margin="0,0,12,0"
+                                ToolTip="Open the shared Spool Config dialog to edit project-level defaults (titleblock, schedule, default scale, view directions, view template, tag family, leader defaults, batch templates). Changes take effect the next time you open this dialog."/>
+                        <Button Content="Cancel" Style="{StaticResource SecondaryButton}"
+                                Click="Cancel_Click" IsCancel="True" Margin="0,0,6,0"/>
+                        <!-- Tooltip falls back to CanCreateBlocker when the
+                             button is disabled — hover over a greyed
+                             Preview / Create Spool and Revit will tell
+                             you which required field is still unset. -->
+                        <Button Content="Preview" Style="{StaticResource SecondaryButton}"
+                                Click="Preview_Click" Margin="0,0,6,0"
+                                IsEnabled="{Binding CanCreate}"
+                                ToolTipService.ShowOnDisabled="True">
+                            <Button.ToolTip>
+                                <ToolTip>
+                                    <TextBlock>
+                                        <Run Text="Build the spool, then open a preview window. Accept keeps it (one undo step); Discard rolls everything back."/>
+                                        <LineBreak/>
+                                        <Run Foreground="#C0392B" Text="{Binding CanCreateBlocker, Mode=OneWay}"/>
+                                    </TextBlock>
+                                </ToolTip>
+                            </Button.ToolTip>
+                        </Button>
+                        <Button Content="Create Spool" Style="{StaticResource PrimaryButton}"
+                                Click="CreateSpool_Click" IsDefault="True"
+                                IsEnabled="{Binding CanCreate}"
+                                ToolTipService.ShowOnDisabled="True"
+                                ToolTip="{Binding CanCreateBlocker}"/>
+                    </StackPanel>
+                    <CheckBox Content="Use Assemblies"
+                              HorizontalAlignment="Right" Margin="0,6,0,0"
+                              IsChecked="{Binding UseAssemblies}"
+                              ToolTip="When on, the spool becomes a Revit AssemblyInstance — its parts become members of an assembly, and Revit's AssemblyViewUtils builds the views + sheet (instead of ad-hoc 3D views on a normal sheet). All other settings (titleblock, drawable region, schedule, scale, tag, leader, renumber, view template, Include Welds) apply identically. Parts already in another assembly will cause the create to abort with the conflict list."/>
                 </StackPanel>
             </Grid>
         </Border>
