@@ -130,5 +130,3 @@ Autodesk evaluation disclaimer.
 ## Acknowledgements
 
 Built against the **Revit 2026** and **Autodesk Fabrication MEP** APIs.
-Extracted from the umbrella **PCF Exporter** add-in
-(<https://github.com/sbuchanan01/PCF-and-Fab>) as a standalone tool.

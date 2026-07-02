@@ -143,8 +143,9 @@ titleblock id, schedule id, view template id, tag family id, tag
 placement toggle, leader defaults, dimension defaults, spool limits,
 custom status param, renumbering defaults, spooler templates.
 
-Schema GUID is unique to Spool Tools — independent of the parent PCF
-Exporter add-in so both can coexist on the same project.
+Schema GUID is unique to this add-in so it doesn't collide with any
+other add-in that might also stamp ExtensibleStorage on
+`doc.ProjectInformation`.
 
 Format is a single delimited key/value string (`k=v;k=v;…`) to keep the
 storage compact and forward-compatible: unknown keys are ignored on
@@ -265,9 +266,10 @@ wrapper `!ReferenceEquals`).
 
 #### `src/Revit/PartTypeClassifier.cs`
 
-Straight-pipe classification + PCF-type derivation. Includes SKEY
-methods inherited from the parent PCF Exporter — they're dead code in
-Spool Tools but harmless (used by nothing here).
+Straight-pipe classification + component-type derivation for
+fabrication parts. Some ancillary classification helpers on this type
+aren't exercised by Spool Tools but are kept intact for future
+extension.
 
 ---
 

@@ -75,7 +75,7 @@ The dialog is organised in two columns.
 - **Change Spool Status** — a project text parameter (dropdown) and
   the value written into it when a spool is created. Default
   `Fabrication Status = Issued for Fabrication` matches the
-  historical PCF Exporter behaviour; pick `(none — skip status
+  common historical default; pick `(none — skip status
   write)` to opt out entirely.
 
 ### Spool Limits

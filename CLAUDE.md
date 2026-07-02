@@ -44,7 +44,7 @@ src/
 │   ├── RevitEventHandler.cs                ← Generic IExternalEventHandler for modeless dialogs
 │   ├── RibbonIconFactory.cs                ← Runtime StreamGeometry icons (spool, spooler, despool, config)
 │   ├── ConnectorHelper.cs                  ← Physical-connector snapshotting
-│   └── PartTypeClassifier.cs               ← PCF-type + straight-pipe classification (SKEY methods harmless dead code)
+│   └── PartTypeClassifier.cs               ← Straight-pipe + component-type classification
 └── UI/                                     ← WPF dialogs (all modeless)
     ├── SpoolDialog.xaml(.cs)               ← Create Spool
     ├── SpoolerDialog.xaml(.cs)             ← The Spooler
@@ -131,9 +131,9 @@ when modifying view / tag / assembly code.
 - **The Spooler's Start + Break model** — Start seeds the walk; each
   Break element caps a spool at that element and starts a new spool on
   the far side. Branches off tees always split.
-- **ExtensibleStorage schema is independent of the parent PCF Exporter.**
-  Fresh GUID in `SpoolSettings.cs` so both add-ins can coexist on the
-  same project.
+- **ExtensibleStorage schema GUID is unique to this add-in** (defined in
+  `SpoolSettings.cs`) so it doesn't collide with any other add-in that
+  might also stamp ExtensibleStorage on `doc.ProjectInformation`.
 
 ## When you change the placement algorithm
 

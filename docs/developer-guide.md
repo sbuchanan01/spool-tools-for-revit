@@ -234,10 +234,10 @@ Include the Autodesk evaluation disclaimer in the release notes.
 - **`/// <summary>` XML docs** on public types and members that aren't
   self-explanatory.
 - **British vs American English** — the original author's convention
-  inherited from the parent project is "British in class names +
-  ExtensibleStorage field keys, American in user-facing strings" (e.g.
-  "Labour" internally, "Labor" in dialogs). Spool Tools doesn't really
-  exercise this but the convention's there if it matters.
+  is "British in class names + ExtensibleStorage field keys, American
+  in user-facing strings" (e.g. "Labour" internally, "Labor" in
+  dialogs). Spool Tools doesn't really exercise this but the convention
+  is there if it matters.
 - **Required-field markers** — add an `*` prefix to any dialog label
   whose binding is required for the tool to run. The footer legend
   `*Required setting` explains it.
