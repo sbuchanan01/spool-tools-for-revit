@@ -52,7 +52,9 @@ to close if any required field is unset.
 
 The dialog is organised in two columns.
 
-## Left column
+## Top row — Spool Output Defaults + Default Views to Create
+
+![Spool Output Defaults + Default Views](screenshots/02-config-output-and-views.png)
 
 ### Spool Output Defaults
 
@@ -78,6 +80,10 @@ The dialog is organised in two columns.
   common historical default; pick `(none — skip status
   write)` to opt out entirely.
 
+## Middle row — Spool Limits + Leader Defaults
+
+![Spool Limits + Leader Defaults](screenshots/03-config-limits-and-leader.png)
+
 ### Spool Limits
 
 Upper bounds shared by both tools. Create Spool warns when a single
@@ -89,6 +95,10 @@ The Spooler uses the same values to auto-split a batch run.
 - **Max Length** — longest dimension of the union bounding box of all
   parts. Enable + type a value. Accepts `10.5` (decimal feet) or
   `10-6` (feet-inches).
+
+## Bottom row — Renumbering + Dimensions
+
+![Renumbering + Dimensions](screenshots/04-config-renumbering-and-dimensions.png)
 
 ### Renumbering
 
@@ -111,8 +121,6 @@ defaults on close.
 - **Use length as a separator** — pipes of different centreline
   lengths (rounded to 1/16″) get different numbers. Only meaningful
   when the identical-parts rule is on.
-
-## Right column
 
 ### Default Views to Create
 
@@ -152,6 +160,10 @@ Defaults for the per-run Dimensions row. This feature ships as
 "not deployed" in v1.0.0 — the engine exists but is disabled at
 the config level pending further tuning.
 
+## Full-width — The Spooler batch templates
+
+![Spooler Batch Templates](screenshots/05-config-spooler-templates.png)
+
 ### The Spooler — Batch Templates
 
 Drop any of these **properties** into the templates below; each
@@ -187,6 +199,8 @@ Tab-cycle, ctrl-click, saved selection), then click **Create Spool**.
 
 ## Selection
 
+![Create Spool selection area](screenshots/06-create-selection.png)
+
 The dialog opens showing the current selection count. Two buttons
 adjust the pool without closing the dialog:
 
@@ -203,6 +217,8 @@ parts are unaffected until you explicitly DeSpool it.
 
 ## Spool Number
 
+![Spool Number section](screenshots/07-create-numbering.png)
+
 - **Number** (required) — auto-suggested from the service +
   identifier +  next sequence. Edit freely; the number becomes the
   sheet name and is written into every part's `Spool Number`
@@ -212,17 +228,23 @@ parts are unaffected until you explicitly DeSpool it.
 
 ## Renumber Item Number
 
+![Renumber Item Number](screenshots/08-create-renumber.png)
+
 Same section that lives in Spool Config (see [Renumbering](#renumbering)
 above). Values seed from Spool Config on open. Per-run adjustments
 persist back on close.
 
 ## Views to Create
 
+![Views to Create with preview](screenshots/09-create-views.png)
+
 Tick the ortho + iso views you want on the sheet. A live preview to
 the right shows a schematic of the eight positions relative to the
 part axis.
 
-## Sheet
+## Sheet + Footer
+
+![Sheet section + footer with Use Assemblies](screenshots/10-create-sheet-footer.png)
 
 - **Sheet #** and **Sheet Name** (required) — the sheet the views
   land on. Auto-populates from the Spool Number; edit if your
@@ -232,8 +254,6 @@ part axis.
   **Leader Settings…** (opens a popup with Attached/Free End
   radios, leader length in inches, Tag Offset in inches, and
   Enhanced Tag Placement).
-
-## Footer
 
 - **Spool Config…** — shortcut to open the shared Spool Config
   dialog if you need to change a project default mid-run. Changes
@@ -258,18 +278,24 @@ riser / a whole service in one pass.
 
 ## Selection pool
 
+![Spooler selection pool](screenshots/11-spooler-pool.png)
+
 Header row shows the pool the walk stays inside. **Pick More…** adds
 parts; **Reset** clears it. Preselection at command launch seeds the
 pool; from-scratch launches show 0 selected and wait for a Pick More.
 
 ## Spool Numbering & Naming
 
+![Spool Numbering & Naming](screenshots/12-spooler-numbering.png)
+
 Compact one-line status of the current templates + Identifier +
 starting sequence + starting sheet, all inherited from Spool Config.
 Click **Edit** to open a popup for one-off overrides for this batch
 run. Most users leave this alone and edit Spool Config instead.
 
-## Selection
+## Selection + Auto-Split Rules
+
+![Selection and Auto-Split Rules](screenshots/13-spooler-selection-and-rules.png)
 
 - **Start element** (required) — click **Pick start…** and pick the
   element to begin the walk. Typically an open-end or the branch off
@@ -285,7 +311,7 @@ run. Most users leave this alone and edit Spool Config instead.
 The status line to the right reports the walk result:
 `✓ 4 break(s) — 5 spool(s) on main flow`.
 
-## Auto-Split Rules
+### Auto-Split Rules
 
 Optional constraints that further split a spool when it exceeds a
 threshold:
@@ -304,12 +330,12 @@ threshold:
   as Create Spool; runs per spool with the starting number resetting
   each time.
 
-## Preview
+## Preview + Footer
+
+![Preview + footer with Create Spools](screenshots/14-spooler-preview.png)
 
 3D view coloured per spool partition. **Refresh** re-runs the walk
 + split (useful after adjusting rules or breaks).
-
-## Footer
 
 - **Sheet numbers / sheet titles / names** — a rolling status line
   showing the numbering that will be applied on Create.
